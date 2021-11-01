@@ -82,7 +82,7 @@ docker ps
 ![](2021-11-01-15-49-26.png)
 
 ### Cloud DNS:
-Vou configurar agora as entradas do DNS que vão apontar para o rancher e um balanceador que será configurado vom Wildcard ( * )
+Vou configurar agora as entradas do DNS que vão apontar para o rancher e um balanceador que será configurado com *Wildcard ( * )*
 
 Acessar a zona criada.
 
@@ -96,3 +96,88 @@ gcloud beta dns --project=ordinal-link-321822 record-sets transaction start --zo
 
 ```
 ![](2021-11-01-16-04-08.png)
+
+# Git / Docker Compose / Images builds
+
+### Instalando o GIT
+```sh
+sudo su
+apt-get install git -y
+```
+
+### O que é e faz o docker-compose?
+Docker Compose é uma ferramenta que foi desenvolvida para ajudar a definir e compartilhar aplicativos de vários contêineres. Com o Compose, você pode criar um arquivo YAML para definir os serviços e, com um único comando, pode girar tudo ou destruir tudo.
+
+A grande vantagem de usar o Compose é que você pode definir sua pilha de aplicativos em um arquivo, mantê-la na raiz do seu repo do projeto (agora ele é controlado por versão) e permitir facilmente que outra pessoa contribua com seu projeto. Alguém só precisaria clonar seu repo e iniciar o aplicativo de composição. Na verdade, você pode ver alguns projetos no GitHub/GitLab fazendo exatamente isso agora.
+
+[Documentação oficial](https://docs.docker.com/compose/install/)
+
+### Baixando o Docker Compose:
+```sh
+curl -L "https://github.com/docker/compose/releases/download/1.25.5/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+```
+
+### Aplicando permissão de execução ao binário:
+```sh
+chmod +x /usr/local/bin/docker-compose
+```
+
+### Criando um link simbolico para o executavel. ( Para windows Users, seria como se criasse um atalho. "Shortcut" )
+```sh
+ln -s /usr/local/bin/docker-compose /usr/bin/docker-compose
+```
+
+Com os pacotes já instalados vou clonar o repositório do professor Jonathan Baraldi para o meu servidor.
+```sh
+cd /home/ubuntu
+git clone https://github.com/jonathanbaraldi/devops
+cd devops/exercicios/app
+```
+
+### Fazendo build de um container REDIS
+```sh
+cd redis
+docker build -t robertocorrea/redis:devops .
+docker run -d --name redis -p 6379:6379 robertocorrea/redis:devops
+docker ps
+docker logs redis
+```
+Com isso temos o container do Redis rodando na porta 6379.
+
+### Fazendo build de um container NODE.
+Criando a imagem
+```sh
+cd ../node
+docker build -t robertocorrea/node:devops .
+```
+
+Agora iremos rodar a imagem do node, fazendo a ligação dela com o container do Redis.
+```sh
+docker run -d --name node -p 8080:8080 --link redis robertocorrea/node:devops
+docker ps 
+docker logs node
+```
+Com isso temos nossa aplicação rodando, e conectada no Redis. A api para verificação pode ser acessada em /redis.
+term
+: definition 
+~~The world is flat.~~
+- [x] Write the press release
+- [ ] Update the website
+- [ ] Contact the media 
+
+```plantuml
+!define ICONURL https://raw.githubusercontent.com/tupadr3/plantuml-icon-font-sprites/v2.1.0
+skinparam defaultTextAlignment center
+!include ICONURL/common.puml
+!include ICONURL/font-awesome-5/gitlab.puml
+!include ICONURL/font-awesome-5/java.puml
+!include ICONURL/font-awesome-5/rocket.puml
+!include ICONURL/font-awesome/newspaper_o.puml
+FA_NEWSPAPER_O(news,good news!,node) #White {
+FA5_GITLAB(gitlab,GitLab.com,node) #White
+FA5_JAVA(java,PlantUML,node) #White
+FA5_ROCKET(rocket,Integrated,node) #White
+}
+gitlab ..> java
+java ..> rocket
+```
