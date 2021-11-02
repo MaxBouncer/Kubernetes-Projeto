@@ -6,7 +6,7 @@
 - Sistema operacional Ubuntu 16.04 LTS
 - Domínio a ser utilizado: rcic.com.br
 
-https://github.com/jonathanbaraldi/devops
+[Kubernetes Projeto](https://github.com/robertocorreajr/Kubernetes-Projeto)
 
 
 Teremos 1 máquina que será o Rancher Server e outras 3 máquinas que serão os Kubernetes de produção.
@@ -131,7 +131,7 @@ ln -s /usr/local/bin/docker-compose /usr/bin/docker-compose
 Com os pacotes já instalados vou clonar o repositório para o meu servidor.
 ```sh
 cd /home/ubuntu
-git clone https://github.com/MaxBouncer/Kubernetes-Projeto
+git clone https://github.com/robertocorreajr/Kubernetes-Projeto
 cd devops/exercicios/app
 ```
 <br>
