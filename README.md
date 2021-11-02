@@ -531,3 +531,83 @@ kubectl get pods -n kube-system
 ```
 ![](2021-11-02-02-31-48.png)
 
+# Instalação do Traefik **( DNS )**
+
+## Traefik - DNS
+Antes era muito utilizado o Nginx, HProxi e agora será utilizada uma nova ferramenta que é o Traefik. Cada um dos *"`nos`"* nodes do Cluster terá um container Traefik executando, ele vai ficar ouvindo quando a requisição chegar. Quando a requisição chega ela informa qual aplicação e porta que deseja chegar e o Traefik vai saber que para qual
+![](2021-11-02-09-26-36.png)
+
+```sh
+kubectl apply -f https://raw.githubusercontent.com/containous/traefik/v1.7/examples/k8s/traefik-rbac.yaml
+kubectl apply -f https://raw.githubusercontent.com/containous/traefik/v1.7/examples/k8s/traefik-ds.yaml
+```
+
+Exibindo os pods do traefik rodando. 
+```sh
+kubectl --namespace=kube-system get pods
+```
+![](2021-11-02-09-42-25.png)
+
+No rancher podemos acessar o nome projeto e o system
+
+![](2021-11-02-09-44-53.png)
+
+E mais abaixo no Namespace kube-system podemos ver os pods do traefik executando.
+![](2021-11-02-09-46-32.png)
+
+
+Agora vamos expor o traefik. Toda vez que eu quiser criar um Ingress eu posso criar um arquivo yml como o abaixo para que ele faça esse trabalho.
+```sh
+cd exercicios
+vi ui.yml
+```
+
+código do arquivo ui.yml 
+
+```yml
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: traefik-web-ui
+  namespace: kube-system
+spec:
+  selector:
+    k8s-app: traefik-ingress-lb
+  ports:
+  - name: web
+    port: 80
+    targetPort: 8080
+---
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: traefik-web-ui
+  namespace: kube-system
+spec:
+  rules:
+  - host: traefik.rancher.rcic.com.br
+    http:
+      paths:
+      - path: /
+        backend:
+          serviceName: traefik-web-ui
+          servicePort: web
+```
+
+Após ter o arquivo criado vou executar com o comando abaixo:
+```sh
+kubectl apply -f ui.yml
+```
+![](2021-11-02-09-58-10.png)
+
+Se eu acessar o endereço do Traefik ele vai me abrir a interface web onde teremos um dashboard.
+![](2021-11-02-09-59-45.png)
+
+Todas as vezes que for criado um Ingress ele aparecerá na guia a esqueda de "Frontend" e teremos o seu correspondente especifico para o "Backend".
+![](2021-11-02-10-02-51.png)
+
+Eu não consigo explicar melhor como é o funcionamento do Traefik. Mas talvez esse pensamento seja de ajuda. 
+O Traefik é um DNS que recebe a requisição atravez do cluster e o direciona internamente para onde a aplicação está rodando. Ele é um DNS interno para o Kubernetes.
+
+# Volumes
