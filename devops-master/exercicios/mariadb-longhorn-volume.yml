@@ -12,9 +12,6 @@ spec:
     app: mysql
   clusterIP: None
 
-
-
-
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim
@@ -27,8 +24,6 @@ spec:
   resources:
     requests:
       storage: 1Gi
-
-
 
 ---
 apiVersion: apps/v1

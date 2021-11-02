@@ -534,7 +534,7 @@ kubectl get pods -n kube-system
 # Instalação do Traefik **( DNS )**
 
 ## Traefik - DNS
-Antes era muito utilizado o Nginx, HProxi e agora será utilizada uma nova ferramenta que é o Traefik. Cada um dos *"`nos`"* nodes do Cluster terá um container Traefik executando, ele vai ficar ouvindo quando a requisição chegar. Quando a requisição chega ela informa qual aplicação e porta que deseja chegar e o Traefik vai saber que para qual
+Antes era muito utilizado o Nginx, HProxi e agora será utilizada uma nova ferramenta que é o Traefik. Cada um dos *"`nós`"* nodes do Cluster terá um container Traefik executando, ele vai ficar ouvindo quando a requisição chegar. Quando a requisição chega ela informa qual aplicação e porta que deseja chegar e o Traefik vai saber que qual é e onde internamente ela está, dessa forma temos um bind entre a aplicação e seu pod de execução interno.
 ![](2021-11-02-09-26-36.png)
 
 ```sh
@@ -611,3 +611,209 @@ Eu não consigo explicar melhor como é o funcionamento do Traefik. Mas talvez e
 O Traefik é um DNS que recebe a requisição atravez do cluster e o direciona internamente para onde a aplicação está rodando. Ele é um DNS interno para o Kubernetes.
 
 # Volumes
+
+Os contêineres são imutáveis ​​significa que eles não gravam dados permanentemente em nenhum local de armazenamento, o que significa que, quando um contêiner é excluído, todos os dados gerados durante sua vida útil também são excluídos. Isso dá origem a dois problemas. Uma perda de arquivos quando o contêiner trava e os segundos arquivos não podem ser compartilhados entre os contêineres. É aí que o volume entra em cena. Basicamente, um volume é apenas um diretório, possivelmente com alguns dados, que pode ser acessado pelos contêineres de um pod. Ele resolve esses dois problemas.
+
+Diferença entre o volume K8s e o volume persistente: o ciclo de vida do volume está vinculado a um pod. Ele é excluído quando o pod é excluído. Enquanto o volume persistente tem um ciclo de vida independente. Ele pode existir além da vida útil de um pod.
+
+![](2021-11-02-10-20-29.png)
+
+Quando trabalhamos com vários containers e precisamos gerenciar vários volumes, precisamos de um sistema de gerenciamento para esses volumes e aí entra em cena o Longhorn.
+Nesse exemplo ele vai utilizar o próprio disco do host e criar um sistema de storage em cima, replicando com os armazenamentos internos dos hosts
+
+![](2021-11-02-10-27-26.png)
+
+No exemplo vamos fazer o deploy de uma aplicação MySQL/MariaDb então vamos precisar criar o volume para esse banco de dados.
+
+Vamos acessar o projeto na guia default e selecionar APPs
+
+![](2021-11-02-11-16-53.png)
+
+Ir em Launch e buscar pela aplicação do Longhorn.
+
+![](2021-11-02-11-18-38.png)
+![](2021-11-02-11-19-51.png)
+
+A única mudança que vou fazer no deploy do Longhorn é na sua versão que vou utilizar uma versão mais antiga para manter uma compatibilidade com o projeto.
+![](2021-11-02-11-21-53.png)
+
+Após clicar em Launch vamos aguardar o deploy.
+![](2021-11-02-11-24-48.png)
+![](2021-11-02-11-24-58.png)
+
+Após finalizar o deploy podemos acessar o Longhorn acessando a guia Apps da area Default do projeto e clicando em index.html.
+![](2021-11-02-11-28-13.png)
+
+Essa é a tela de gerenciamento do Longhorn:
+![](2021-11-02-11-29-23.png)
+
+Em Node podemos ver quantos nós temos no cluster
+![](2021-11-02-11-30-37.png)
+
+Volumes criados:
+![](2021-11-02-11-31-34.png)
+
+Agora vamos criar um arquivo *`yml`* com as configurações do volume que queremos.
+```sh
+vi mariadb-longhorn-volume.yml
+```
+
+conteúdo do arquivo *`yml`*
+```yml
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mysql
+  labels:
+    app: mysql
+spec:
+  ports:
+    - port: 3306
+  selector:
+    app: mysql
+  clusterIP: None
+
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: mysql-pvc
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: longhorn
+  resources:
+    requests:
+      storage: 1Gi
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mysql
+  labels:
+    app: mysql
+spec:
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: mysql
+  template:
+    metadata:
+      labels:
+        app: mysql
+    spec:
+      containers:
+      - image: mariadb:10.4
+        name: mysql
+        env:
+        - name: MYSQL_ROOT_PASSWORD
+          value: changeme
+        ports:
+        - containerPort: 3306
+          name: mysql
+        
+        volumeMounts:
+        - name: mysql-volume
+          mountPath: /var/lib/mysql
+        
+        env:
+        - name: MYSQL_ROOT_PASSWORD
+          value: "rancher"
+      
+      volumes:
+      - name: mysql-volume
+        persistentVolumeClaim:
+          claimName: mysql-pvc
+```
+
+
+> Observe o trecho abaixo do arquivo:
+> ```yml
+> apiVersion: v1
+> kind: PersistentVolumeClaim
+> metadata:
+>   name: mysql-pvc
+> spec:
+>   accessModes:
+>     - ReadWriteOnce
+>   storageClassName: longhorn
+>   resources:
+>     requests:
+>       storage: 1Gi
+> ```
+> Estamos criando um volume no Longhorn com o nome de *`mysql-pvc`* com o modo de acesso *`ReadWriteOnce`* e com *`1Gi`* de armazenamento.
+> <br>
+> <br>
+>  
+> No trecho da criação do deployment do mysql temos a informação de qual volume será utilizado e o nome que será dado à esse volumen dentro do pod/container, no exemplo ele está ganhando o nome de *`mysql-volume`*.
+> ```yml
+>       volumes:
+>       - name: mysql-volume
+>         persistentVolumeClaim:
+>           claimName: mysql-pvc
+> ```
+> <br>
+> 
+> E no mesmo arquivo de deployment do mysql, um pouco acima do anterior, estamos montando ele em *`/var/lib/mysql`*
+> ```yml
+>         volumeMounts:
+>         - name: mysql-volume
+>           mountPath: /var/lib/mysql
+> ```
+
+Visto isso vamos acessar o servidor do Rancher e executar o script.
+```sh
+kubectl apply -f mariadb-longhorn-volume.yml
+```
+![](2021-11-02-11-54-42.png)
+
+Ao acessar o Longhorn podemos ver o volume criado:
+![](2021-11-02-11-55-48.png)
+
+E se acessarmos o volume vamos ver as 3 replicas criadas que estão rodando em cada um dos hosts:
+![](2021-11-02-11-57-52.png)
+
+
+Agora vamos acessar o shell do pod mysql para ver o ponto de montagem como ficou:
+
+![](2021-11-02-12-03-11.png)
+![](2021-11-02-12-02-35.png)
+
+Tambem podemos acessar o shell indo pela máquina onde o pod está rodando. No meu caso ele está rodando no servidor ks8-2
+![](2021-11-02-12-11-10.png)
+
+Vou acessar por ssh esse servidor e checar com os mesmos comandos, inclusive salvando um arquivo lá para posteriormente quando ele for montado em outro servidor possamos ver esse arquivo tendo sido persistido.
+
+Mas antes precisamos acessar o pod do mysql que esta rodando nesse servidor, então vou começar dando o comando *`docker ps`* para conseguir ver o *`container id`* do servidor e depois vou utilizar esse id para executal o shell dele
+![](2021-11-02-12-27-26.png)
+
+No meu exemplo o container tinha o id: 48b647e1df3e então executei o comando como ilustrado abaixo:
+
+```sh
+docker exec -it 48b647e1df3e /bin/bash
+```
+![](2021-11-02-12-32-17.png)
+
+Criando um arquivo no volume:
+
+![](2021-11-02-12-35-54.png)
+
+
+Agora vou simular uma falha deletando o pod pelo rancher. Assim que ele for deletado ele vai ser re-criado automanticamente e assim que for recriado vou checar se o arquivo continua lá.
+
+![](2021-11-02-12-38-11.png)
+![](2021-11-02-12-39-49.png)
+
+No meu exemplo ele acabou criando no mesmo host, mas não tem problema, podemos checar do mesmo jeito.
+Observe também que ele criou um adicional antes de excluir o anterior.
+
+![](2021-11-02-12-41-11.png)
+
+O *`container id`* mudou e vamos acessar ele por esse novo id
+![](2021-11-02-12-43-21.png)
+
+![](2021-11-02-12-48-43.png)
+
