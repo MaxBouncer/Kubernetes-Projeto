@@ -372,14 +372,162 @@ Devemos aguardar até o termino de todo o deploy, uma vez que ele da algumas men
 <br>
 <br>
 
-# kubctl
+# Instalação do Kubectl
 O que é o kubctl?
 É a **`CLI`** - *`"comand line interface"`* do Kubernetes e é atravez dela que vamos interagir com o Cluster. 
 Vamos precisar instalar ela apenas no servidor do Rancher Server, para isso vou acessar a máquina via SSH e executar a instalação abaixo:
-```sh
-apt-get update && apt-get install -y apt-transport-https gnupg2
-curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key add -
-echo "deb https://apt.kubernetes.io/ kubernetes-xenial main" | tee -a /etc/apt/sources.list.d/kubernetes.list
-apt-get update
-apt-get install -y kubectl
+> OBS: executar cada linha separadamente.
+> ```sh
+> apt-get update && apt-get install -y apt-transport-https gnupg2
+> ```
+> ```sh
+> curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key add -
+> ```
+> ```sh
+> echo "deb https://apt.kubernetes.io/ kubernetes-xenial main" | tee -a /etc/apt/sources.list.d/kubernetes.list
+> ```
+> ```sh
+> apt-get update
+> ```
+> ```sh
+> apt-get install -y kubectl
+> ```
+
+Com essa instalação ao executar comandos pelo Kubectl ele vai disparar os comando para ele mesmo (Rancher) e ele vai encaminhar os comandos para o Cluster Kubernetes que estão agregados. Então agora todas as execuções serão feitas por arquivos *`yml`*
+
+Bom após a instalação do Kubectl vamos acessar novamente à página do rancher e pegar o arquivo Kubeconfig File para rodar no servidor Rancher do Cluster.
+![](2021-11-02-02-21-25.png)
+
+Vai abrir um script que já informa que ele deve ser salvo no caminho: ~/.kube/config
+![](2021-11-02-02-22-39.png)
+
+Como estamos utilizando o usuário ubuntu para rodar o Rancher, será necessário utilizar esse usuário para criar o arquivo ou criar como root e mudar o dono do arquivo para o ubuntu. No meu caso eu vou utilizar diretamente o usuário ubuntu.
+
+Primeiro eu vou criar o diretório ~/.kube e depois o arquivo config para aí colar o script abaixo:
+```yml
+apiVersion: v1
+kind: Config
+clusters:
+- name: "padawan"
+  cluster:
+    server: "https://rancher.rcic.com.br/k8s/clusters/c-89zvp"
+    certificate-authority-data: "LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tCk1JSUJpVENDQ\
+      VM2Z0F3SUJBZ0lCQURBS0JnZ3Foa2pPUFFRREFqQTdNUnd3R2dZRFZRUUtFeE5rZVc1aGJXbGoKY\
+      kdsemRHVnVaWEl0YjNKbk1Sc3dHUVlEVlFRREV4SmtlVzVoYldsamJHbHpkR1Z1WlhJdFkyRXdIa\
+      GNOTWpFeApNVEF5TURRd05EUXhXaGNOTXpFeE1ETXhNRFF3TkRReFdqQTdNUnd3R2dZRFZRUUtFe\
+      E5rZVc1aGJXbGpiR2x6CmRHVnVaWEl0YjNKbk1Sc3dHUVlEVlFRREV4SmtlVzVoYldsamJHbHpkR\
+      1Z1WlhJdFkyRXdXVEFUQmdjcWhrak8KUFFJQkJnZ3Foa2pPUFFNQkJ3TkNBQVJicC9GQ0xNSHpUN\
+      zNtWVJCc0xCUFBiT2wrVUw2ZGk5YlBEM0orQW5WVApjMWNST3hhVE91NE03S3kyMTdiQUYrblJhL\
+      zFLakdEblFaMG4vcmFVQ2hKQ295TXdJVEFPQmdOVkhROEJBZjhFCkJBTUNBcVF3RHdZRFZSMFRBU\
+      UgvQkFVd0F3RUIvekFLQmdncWhrak9QUVFEQWdOSkFEQkdBaUVBdHNEZDByR1cKb1NHWlFFR050L\
+      zhzWHFtZEhOOUJWNm9Pa1FTaFZtUTFvWTBDSVFDM3IvUWxtckNuR2RQTEFQU212UlFOelpCTAphU\
+      Eg3b0VwKzl6UHNPTEJ1N1E9PQotLS0tLUVORCBDRVJUSUZJQ0FURS0tLS0t"
+- name: "padawan-k8s-1"
+  cluster:
+    server: "https://10.138.0.3:6443"
+    certificate-authority-data: "LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tCk1JSUN3akNDQ\
+      WFxZ0F3SUJBZ0lCQURBTkJna3Foa2lHOXcwQkFRc0ZBREFTTVJBd0RnWURWUVFERXdkcmRXSmwKT\
+      FdOaE1CNFhEVEl4TVRFd01qQTBOREV4TUZvWERUTXhNVEF6TVRBME5ERXhNRm93RWpFUU1BNEdBM\
+      VVFQXhNSAphM1ZpWlMxallUQ0NBU0l3RFFZSktvWklodmNOQVFFQkJRQURnZ0VQQURDQ0FRb0NnZ\
+      0VCQVBBQ1o2SW4xMW5sCmFUQjBwTEtHSlZkV3BrUDFyN3dSbG9VbENhR3ZvOGZic1g3cVMrL05jT\
+      0RzbnBNQ1RDMGtzTGpkam42UTVQMU8KMXF0Ui8rT2hzVHdaUTAwYzJUNm9jSUtNNmlUSnUzTzQxe\
+      TlKN2MvWXV1VmlNdWlkYXJZNWx0WUpzRER4dEh4dAoyUndzeFh3ZjcvSEt3RXBpQXo3WS83MGF6d\
+      TVYRVJ4Y3ZmMjJ1SGJURnJ3REdnYllRTnhsZVREWngwVjc2eHd6CkxpTVlqU2JwT0l6eThwSTFFV\
+      zZMSUtYNU84WEVGbndUZlBKaGJ1OHF2NjVYS3ZTQytCQjBXWk5vS3lEUFJBcEMKOGNpbytINGt3R\
+      XJTYjZIcENjaVBmWWl2bzJYUGQxSkRtMXladHdMcXZOTVlXaWZydm4rNzdCN2xmaEVLRlpQWAptK\
+      09nTEg0U2M2TUNBd0VBQWFNak1DRXdEZ1lEVlIwUEFRSC9CQVFEQWdLa01BOEdBMVVkRXdFQi93U\
+      UZNQU1CCkFmOHdEUVlKS29aSWh2Y05BUUVMQlFBRGdnRUJBQXZZZG1pYnozRkpSVzBwdmxYWEJxe\
+      WJ5ZjVMRXpGNytKTEoKQWsvZjYzSTdxMEdudzB0cjVEL0QxT3BJQjFkdDJsNnQwNGU5cHhiR0dXd\
+      mJpbzJnUHdyK2ZXZ0hrbTZEbkt6Ywp4dHRDaHNlNnRrL3Zubng2V1VyZlIwVEtkZzB2QldBUXBoc\
+      m5KTHB6SjJZQjJlKzRJU3hMc3cyU25hWW11Vzk4CnpJb2E1bG5zaksyczlIYlFwRVBibjNLMHNia\
+      1ZsWFFieEZESkRLb0c2czFWV3FrcGJrVDFJbU8xNHdRUnA4MGIKSEY1QUpJZS9NOTBSejlqUVJrV\
+      HF2RHhtcmpSdmxKNEgwVTM4UE41M28xVExsK1VuWlZ5U0VCTVRmemUwcE9jWApwbm9xNHE5V3ZpU\
+      FlmM1FPbVV1NDdaelZERVBBc3JBTDdHWnkxL0dIWUJPWW0zOG4wN2s9Ci0tLS0tRU5EIENFUlRJR\
+      klDQVRFLS0tLS0K"
+- name: "padawan-k8s-3"
+  cluster:
+    server: "https://10.138.0.5:6443"
+    certificate-authority-data: "LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tCk1JSUN3akNDQ\
+      WFxZ0F3SUJBZ0lCQURBTkJna3Foa2lHOXcwQkFRc0ZBREFTTVJBd0RnWURWUVFERXdkcmRXSmwKT\
+      FdOaE1CNFhEVEl4TVRFd01qQTBOREV4TUZvWERUTXhNVEF6TVRBME5ERXhNRm93RWpFUU1BNEdBM\
+      VVFQXhNSAphM1ZpWlMxallUQ0NBU0l3RFFZSktvWklodmNOQVFFQkJRQURnZ0VQQURDQ0FRb0NnZ\
+      0VCQVBBQ1o2SW4xMW5sCmFUQjBwTEtHSlZkV3BrUDFyN3dSbG9VbENhR3ZvOGZic1g3cVMrL05jT\
+      0RzbnBNQ1RDMGtzTGpkam42UTVQMU8KMXF0Ui8rT2hzVHdaUTAwYzJUNm9jSUtNNmlUSnUzTzQxe\
+      TlKN2MvWXV1VmlNdWlkYXJZNWx0WUpzRER4dEh4dAoyUndzeFh3ZjcvSEt3RXBpQXo3WS83MGF6d\
+      TVYRVJ4Y3ZmMjJ1SGJURnJ3REdnYllRTnhsZVREWngwVjc2eHd6CkxpTVlqU2JwT0l6eThwSTFFV\
+      zZMSUtYNU84WEVGbndUZlBKaGJ1OHF2NjVYS3ZTQytCQjBXWk5vS3lEUFJBcEMKOGNpbytINGt3R\
+      XJTYjZIcENjaVBmWWl2bzJYUGQxSkRtMXladHdMcXZOTVlXaWZydm4rNzdCN2xmaEVLRlpQWAptK\
+      09nTEg0U2M2TUNBd0VBQWFNak1DRXdEZ1lEVlIwUEFRSC9CQVFEQWdLa01BOEdBMVVkRXdFQi93U\
+      UZNQU1CCkFmOHdEUVlKS29aSWh2Y05BUUVMQlFBRGdnRUJBQXZZZG1pYnozRkpSVzBwdmxYWEJxe\
+      WJ5ZjVMRXpGNytKTEoKQWsvZjYzSTdxMEdudzB0cjVEL0QxT3BJQjFkdDJsNnQwNGU5cHhiR0dXd\
+      mJpbzJnUHdyK2ZXZ0hrbTZEbkt6Ywp4dHRDaHNlNnRrL3Zubng2V1VyZlIwVEtkZzB2QldBUXBoc\
+      m5KTHB6SjJZQjJlKzRJU3hMc3cyU25hWW11Vzk4CnpJb2E1bG5zaksyczlIYlFwRVBibjNLMHNia\
+      1ZsWFFieEZESkRLb0c2czFWV3FrcGJrVDFJbU8xNHdRUnA4MGIKSEY1QUpJZS9NOTBSejlqUVJrV\
+      HF2RHhtcmpSdmxKNEgwVTM4UE41M28xVExsK1VuWlZ5U0VCTVRmemUwcE9jWApwbm9xNHE5V3ZpU\
+      FlmM1FPbVV1NDdaelZERVBBc3JBTDdHWnkxL0dIWUJPWW0zOG4wN2s9Ci0tLS0tRU5EIENFUlRJR\
+      klDQVRFLS0tLS0K"
+- name: "padawan-k8s-2"
+  cluster:
+    server: "https://10.138.0.4:6443"
+    certificate-authority-data: "LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tCk1JSUN3akNDQ\
+      WFxZ0F3SUJBZ0lCQURBTkJna3Foa2lHOXcwQkFRc0ZBREFTTVJBd0RnWURWUVFERXdkcmRXSmwKT\
+      FdOaE1CNFhEVEl4TVRFd01qQTBOREV4TUZvWERUTXhNVEF6TVRBME5ERXhNRm93RWpFUU1BNEdBM\
+      VVFQXhNSAphM1ZpWlMxallUQ0NBU0l3RFFZSktvWklodmNOQVFFQkJRQURnZ0VQQURDQ0FRb0NnZ\
+      0VCQVBBQ1o2SW4xMW5sCmFUQjBwTEtHSlZkV3BrUDFyN3dSbG9VbENhR3ZvOGZic1g3cVMrL05jT\
+      0RzbnBNQ1RDMGtzTGpkam42UTVQMU8KMXF0Ui8rT2hzVHdaUTAwYzJUNm9jSUtNNmlUSnUzTzQxe\
+      TlKN2MvWXV1VmlNdWlkYXJZNWx0WUpzRER4dEh4dAoyUndzeFh3ZjcvSEt3RXBpQXo3WS83MGF6d\
+      TVYRVJ4Y3ZmMjJ1SGJURnJ3REdnYllRTnhsZVREWngwVjc2eHd6CkxpTVlqU2JwT0l6eThwSTFFV\
+      zZMSUtYNU84WEVGbndUZlBKaGJ1OHF2NjVYS3ZTQytCQjBXWk5vS3lEUFJBcEMKOGNpbytINGt3R\
+      XJTYjZIcENjaVBmWWl2bzJYUGQxSkRtMXladHdMcXZOTVlXaWZydm4rNzdCN2xmaEVLRlpQWAptK\
+      09nTEg0U2M2TUNBd0VBQWFNak1DRXdEZ1lEVlIwUEFRSC9CQVFEQWdLa01BOEdBMVVkRXdFQi93U\
+      UZNQU1CCkFmOHdEUVlKS29aSWh2Y05BUUVMQlFBRGdnRUJBQXZZZG1pYnozRkpSVzBwdmxYWEJxe\
+      WJ5ZjVMRXpGNytKTEoKQWsvZjYzSTdxMEdudzB0cjVEL0QxT3BJQjFkdDJsNnQwNGU5cHhiR0dXd\
+      mJpbzJnUHdyK2ZXZ0hrbTZEbkt6Ywp4dHRDaHNlNnRrL3Zubng2V1VyZlIwVEtkZzB2QldBUXBoc\
+      m5KTHB6SjJZQjJlKzRJU3hMc3cyU25hWW11Vzk4CnpJb2E1bG5zaksyczlIYlFwRVBibjNLMHNia\
+      1ZsWFFieEZESkRLb0c2czFWV3FrcGJrVDFJbU8xNHdRUnA4MGIKSEY1QUpJZS9NOTBSejlqUVJrV\
+      HF2RHhtcmpSdmxKNEgwVTM4UE41M28xVExsK1VuWlZ5U0VCTVRmemUwcE9jWApwbm9xNHE5V3ZpU\
+      FlmM1FPbVV1NDdaelZERVBBc3JBTDdHWnkxL0dIWUJPWW0zOG4wN2s9Ci0tLS0tRU5EIENFUlRJR\
+      klDQVRFLS0tLS0K"
+
+users:
+- name: "padawan"
+  user:
+    token: "kubeconfig-user-hng6b.c-89zvp:cptnqnfmwjghll44qkfbfnprs7w9bdwtv7rph8jjft52s7zmljjhb5"
+
+contexts:
+- name: "padawan"
+  context:
+    user: "padawan"
+    cluster: "padawan"
+- name: "padawan-k8s-1"
+  context:
+    user: "padawan"
+    cluster: "padawan-k8s-1"
+- name: "padawan-k8s-3"
+  context:
+    user: "padawan"
+    cluster: "padawan-k8s-3"
+- name: "padawan-k8s-2"
+  context:
+    user: "padawan"
+    cluster: "padawan-k8s-2"
+
+current-context: "padawan"
+
 ```
+![](2021-11-02-02-26-50.png)
+
+Agora para checar se está tudo funcionando vou executar o comando abaixo que vai se conectar ao Cluster e retornar os nós que estão rodando *`nodes`*
+
+```sh
+kubectl get nodes
+```
+
+![](2021-11-02-02-29-07.png)
+
+E para pegar todos os pods que estão rodando no namespace kube-system
+```sh
+kubectl get pods -n kube-system
+```
+![](2021-11-02-02-31-48.png)
+
