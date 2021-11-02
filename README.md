@@ -362,3 +362,24 @@ Servidor 3
 sudo docker run -d --privileged --restart=unless-stopped --net=host -v /etc/kubernetes:/etc/kubernetes -v /var/run:/var/run rancher/rancher-agent:v2.4.3 --server https://rancher.rcic.com.br --token tgcjqs772cgg5kk7fzwq59dsffdxnxrnng7c2hg6g2r7d4b2zfcrm6 --ca-checksum e622c086cf27d07232f97ab963a09e37bded73fbb33abd7000029ede94e50550 --node-name k8s-3 --etcd --controlplane --worker
 ```
 Vamos entrar em cada uma das máquinas destinadas à membros do cluster e realizar o deploy do Kubernetes, cada um com o seu respectivo script.
+
+Após a execução do Script o Rancher vai se encarregar de fazer todo o deploy nas máquinas. Podemos observer o status indo na interface do rancher e acessar o pelo nome do cluster e posteriormente nodes.
+![](2021-11-02-01-44-56.png)
+![](2021-11-02-01-45-26.png)
+
+Devemos aguardar até o termino de todo o deploy, uma vez que ele da algumas mensagens de erro e volta a tentar realizar o deploy novamente até que tudo esteja realmente instalado e finalizado.
+![](2021-11-02-01-52-13.png)
+<br>
+<br>
+
+# kubctl
+O que é o kubctl?
+É a **`CLI`** - *`"comand line interface"`* do Kubernetes e é atravez dela que vamos interagir com o Cluster. 
+Vamos precisar instalar ela apenas no servidor do Rancher Server, para isso vou acessar a máquina via SSH e executar a instalação abaixo:
+```sh
+apt-get update && apt-get install -y apt-transport-https gnupg2
+curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key add -
+echo "deb https://apt.kubernetes.io/ kubernetes-xenial main" | tee -a /etc/apt/sources.list.d/kubernetes.list
+apt-get update
+apt-get install -y kubectl
+```
