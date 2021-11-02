@@ -128,12 +128,14 @@ chmod +x /usr/local/bin/docker-compose
 ln -s /usr/local/bin/docker-compose /usr/bin/docker-compose
 ```
 
-Com os pacotes já instalados vou clonar o repositório do professor Jonathan Baraldi para o meu servidor.
+Com os pacotes já instalados vou clonar o repositório para o meu servidor.
 ```sh
 cd /home/ubuntu
-git clone https://github.com/jonathanbaraldi/devops
+git clone https://github.com/MaxBouncer/Kubernetes-Projeto
 cd devops/exercicios/app
 ```
+<br>
+<br>
 
 ### Fazendo build de um container REDIS
 ```sh
@@ -144,6 +146,8 @@ docker ps
 docker logs redis
 ```
 Com isso temos o container do Redis rodando na porta 6379.
+<br>
+<br>
 
 ### Fazendo build de um container NODE.
 Criando a imagem
@@ -181,4 +185,96 @@ Iremos acessar a api em /redis para nos certificar que está tudo ok, e depois i
 ```sh
 docker rm -f $(docker ps -a -q)
 docker volume rm $(docker volume ls)
+```
+<br>
+<br>
+
+### Docker Compose
+
+Até agora foi feito um exercício onde foi colocado alguns containers para rodar e eles foram interligando. Foi possivel ver como funciona a aplicação que possui um contador de acessos, mas essa aplicação estava rodando apenas na máquina principal que estava destinada ao rancher. Então uma das ultimas tarefas foi remover os containers que utilizamos e seus volumes. 
+
+Agora vamos preparar para *buildar* 
+
+Nesse exercício que fizemos agora, colocamos os containers para rodar, e interligando eles, foi possível observar  como funciona nossa aplicação que tem um contador de acessos.
+Para rodar nosso docker-compose, precisamos remover todos os containers que estão rodando e ir na raiz do diretório para rodar.
+
+É preciso editar o arquivo docker-compose.yml, onde estão os nomes das imagens e colocar o seu nome de usuário.
+
+- Linha 8   = \<dockerhub-user>/nginx:devops
+- Linha 16  = image: \<dockerhub-user>/redis:devops
+- Linha 33  = image: \<dockerhub-user>/node:devops
+
+<br>
+*Abaixo o arquivo já editado*
+<br>
+
+```yml
+# Versão 2 do Docker-Compose
+version: '2'
+
+services:
+    
+    nginx:
+        restart: "always"
+        image: robertocorrea/nginx:devops
+        ports:
+            - "80:80"
+        links:
+            - node
+            
+    redis:
+        restart: "always"
+        image: robertocorrea/redis:devops
+        ports:
+            - 6379
+
+    mysql:
+        restart: "always"
+        image: mysql
+        ports:
+            - 3306
+        environment:
+            MYSQL_ROOT_PASSWORD: 123
+            MYSQL_DATABASE: books
+            MYSQL_USER: apitreinamento
+            MYSQL_PASSWORD: 123 
+
+    node:
+        restart: "always"
+        image: robertocorrea/node:devops
+        links:
+            - redis
+            - mysql
+        ports:
+            - 8080
+        volumes:
+            -  volumeteste:/tmp/volumeteste
+
+# Mapeamento dos volumes
+volumes:
+    volumeteste:
+        external: false
+```
+<br>
+
+Após alterar e colocar o nome correto das imagens, rodar o comando de *up -d* para subir toda a stack.
+
+```sh
+cd ..
+vi docker-compose.yml
+docker-compose -f docker-compose.yml up -d
+curl <ip>:80 
+```
+
+```sh
+	----------------------------------
+	This page has been viewed 29 times
+	----------------------------------
+```
+
+Se acessarmos o IP:80, iremos acessar a nossa aplicação. Olhar os logs pelo docker logs, e fazer o carregamento do banco em /load
+
+Para terminar nossa aplicação temos que rodar o comando do docker-compose abaixo:
+```sh
+$ docker-compose down
 ```
