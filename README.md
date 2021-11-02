@@ -179,7 +179,7 @@ docker ps
 ```
 Podemos acessar então nossa aplicação nas portas 80 e 8080 no ip da nossa instância.
 
-![](2021-11-01-18-48-07.png)
+![](2021-11-01-23-49-23.png)
 
 Iremos acessar a api em /redis para nos certificar que está tudo ok, e depois iremos limpar todos os containers e volumes.
 ```sh
@@ -193,12 +193,12 @@ docker volume rm $(docker volume ls)
 
 Até agora foi feito um exercício onde foi colocado alguns containers para rodar e eles foram interligando. Foi possivel ver como funciona a aplicação que possui um contador de acessos, mas essa aplicação estava rodando apenas na máquina principal que estava destinada ao rancher. Então uma das ultimas tarefas foi remover os containers que utilizamos e seus volumes. 
 
-Agora vamos preparar para *buildar* 
+Agora vamos preparar para *"buildar"* 
 
 Nesse exercício que fizemos agora, colocamos os containers para rodar, e interligando eles, foi possível observar  como funciona nossa aplicação que tem um contador de acessos.
 Para rodar nosso docker-compose, precisamos remover todos os containers que estão rodando e ir na raiz do diretório para rodar.
 
-É preciso editar o arquivo docker-compose.yml, onde estão os nomes das imagens e colocar o seu nome de usuário.
+É preciso editar o arquivo docker-compose.yml, onde estão os nomes das imagens e colocar o seu nome do repositório que você criou.
 
 - Linha 8   = \<dockerhub-user>/nginx:devops
 - Linha 16  = image: \<dockerhub-user>/redis:devops
@@ -257,24 +257,34 @@ volumes:
 ```
 <br>
 
+**OBS:** *Note que quando removemos os container, mantivemos a imagem dos container e será essas imagens que vamos utilizar nesse build.*
+<br>
+
+![](2021-11-01-23-43-33.png)
+
 Após alterar e colocar o nome correto das imagens, rodar o comando de *up -d* para subir toda a stack.
 
 ```sh
 cd ..
 vi docker-compose.yml
 docker-compose -f docker-compose.yml up -d
-curl <ip>:80 
+curl rancher.rcic.com.br:80
 ```
 
 ```sh
+curl rancher.rcic.com.br:80/redis
 	----------------------------------
 	This page has been viewed 29 times
 	----------------------------------
 ```
 
-Se acessarmos o IP:80, iremos acessar a nossa aplicação. Olhar os logs pelo docker logs, e fazer o carregamento do banco em /load
+Se acessarmos o IP na porta 80 vamos ver a aplicação rodando e também podemos acessar o /redis para ver o contador de acesso à essa página incrementando a cada acesso.
+![](2021-11-01-23-52-14.png)
 
-Para terminar nossa aplicação temos que rodar o comando do docker-compose abaixo:
+Explicação: Toda essa aplicação foi *"deployada"*  de uma só vez com um unico arquivo docker *docker file*. Ele criou todo um deploy de aplicação, totalmente padronizado e com todas as suas dependências satisfeitas.
+
+Agora para finalizar vamos terminar a nossa aplicação temos que rodar o comando do docker-compose abaixo:
 ```sh
-$ docker-compose down
+docker-compose down
 ```
+![](2021-11-01-23-59-09.png)
