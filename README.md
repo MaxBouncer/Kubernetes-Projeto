@@ -122,7 +122,8 @@ curl -L "https://github.com/docker/compose/releases/download/1.25.5/docker-compo
 chmod +x /usr/local/bin/docker-compose
 ```
 
-### Criando um link simbolico para o executavel. ( Para windows Users, seria como se criasse um atalho. "Shortcut" )
+### Criando um link simbolico para o executavel.
+*( Para windows Users, seria como se criasse um atalho. "Shortcut" )*
 ```sh
 ln -s /usr/local/bin/docker-compose /usr/bin/docker-compose
 ```
@@ -158,26 +159,26 @@ docker ps
 docker logs node
 ```
 Com isso temos nossa aplicação rodando, e conectada no Redis. A api para verificação pode ser acessada em /redis.
-term
-: definition 
-~~The world is flat.~~
-- [x] Write the press release
-- [ ] Update the website
-- [ ] Contact the media 
+<br>
+<br>
 
-```plantuml
-!define ICONURL https://raw.githubusercontent.com/tupadr3/plantuml-icon-font-sprites/v2.1.0
-skinparam defaultTextAlignment center
-!include ICONURL/common.puml
-!include ICONURL/font-awesome-5/gitlab.puml
-!include ICONURL/font-awesome-5/java.puml
-!include ICONURL/font-awesome-5/rocket.puml
-!include ICONURL/font-awesome/newspaper_o.puml
-FA_NEWSPAPER_O(news,good news!,node) #White {
-FA5_GITLAB(gitlab,GitLab.com,node) #White
-FA5_JAVA(java,PlantUML,node) #White
-FA5_ROCKET(rocket,Integrated,node) #White
-}
-gitlab ..> java
-java ..> rocket
+### Container=NGINX
+Iremos fazer o build do container do nginx, que será nosso balanceador de carga.
+```sh
+cd ../nginx
+docker build -t robertocorrea/nginx:devops .
+```
+Criando o container do nginx a partir da imagem e fazendo a ligação com o container do Node
+```sh
+docker run -d --name nginx -p 80:80 --link node robertocorrea/nginx:devops
+docker ps
+```
+Podemos acessar então nossa aplicação nas portas 80 e 8080 no ip da nossa instância.
+
+![](2021-11-01-18-48-07.png)
+
+Iremos acessar a api em /redis para nos certificar que está tudo ok, e depois iremos limpar todos os containers e volumes.
+```sh
+docker rm -f $(docker ps -a -q)
+docker volume rm $(docker volume ls)
 ```
