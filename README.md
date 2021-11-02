@@ -815,5 +815,4 @@ Observe também que ele criou um adicional antes de excluir o anterior.
 O *`container id`* mudou e vamos acessar ele por esse novo id
 ![](2021-11-02-12-43-21.png)
 
-![](2021-11-02-12-48-43.png)
-
+![](2021-11-02-12-54-08.png)
