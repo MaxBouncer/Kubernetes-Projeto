@@ -909,10 +909,10 @@ Usuário: admin
 Password: admin
 ![](2021-11-02-14-01-05.png)
 
-Assim que logar vamos acessar a guia System > Inputs
+Assim que logar vamos acessar a guia System > Inputs <br>
 ![](2021-11-02-14-03-09.png)
 
-Vamos escolher um do tipo *`GELF UDP`* e clicar em *`Launch new input`*
+Vamos escolher um do tipo *`GELF UDP`* e clicar em *`Launch new input`* <br>
 ![](2021-11-02-14-05-41.png)
 
 Vamos selecionar Global e dar um nome para ele, no meu exemplo eu dei o nome de k8s. <br>
@@ -935,3 +935,27 @@ Agora o Graylog está rodando e capturando as informações necessárias.
 ![](2021-11-02-14-24-43.png)
 
 > Considerações: Com o *`Graylog`* podemos capturar os logs da aplicação e dar acesso ao desenvolvedor para que ele possa acessar os logs de sua aplicação sem que seja necessário eu dar acesso ao Cluster à ele, além de ter uma ferramenta onde podemos centralizar todos os logs e acompanha-los. O *`Graylog`* também é capaz de pegar os logs do LDAP. 
+
+<br>
+<br>
+
+# Monitoramento
+
+## Habilitando o monitoramento.
+Para habilitar o monitoramento, devemos acessar o rancher e ir na aba tools > monitoring.
+![](2021-11-02-18-24-52.png)
+
+Lá devemos habilitar o monitoramento clicando em Enable.
+> Aqui quero fazer uma ressalva. Em um ambiente real de produção, temos que aumentar os valores de CPU e Memória e quem sabe também habilitar a persistência de dados. Em um ambiente real de produção precisamos que a máquina tenha mais poder de *`"fogo"`* para conseguir processar todas as informações.
+
+Foi criado um Namespace chamado cattle-prometheus, o print abaixo está em fase de deploying
+![](2021-11-02-18-28-40.png)
+
+E agora essa é a nova tela com o monitoramento ativo.
+![](2021-11-02-18-30-36.png)
+
+Também ganhamos uma área de metricas.
+![](2021-11-02-18-31-14.png)
+
+E se em qualquer lugar da tela eu clicar no icone do Grafana ele vai abrir o Grafana e exibir tudo que está sendo monitorado por ele no momento.
+![](2021-11-02-18-33-36.png)
