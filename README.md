@@ -288,3 +288,77 @@ Agora para finalizar vamos terminar a nossa aplicação temos que rodar o comand
 docker-compose down
 ```
 ![](2021-11-01-23-59-09.png)
+
+<br>
+<br>
+
+# Rancher - Single Node
+[Rancher](https://rancher.com/)
+
+
+O Rancher permite que tenhamos vários cluster Kubernetes gerenciados pelo Rancher, como por exemplo um Cluster Kubernets para Desenvolvimento, outro para Produção, Testes etc...
+Por padrão o Kubernetes não tem a autenticação LDAP para os usuários, então o Rancher pode cuidar dessa autenticação e não precisaremos mais nos preocupar com essa integração do Kubernetes. Podemos configurar o Rancher para rodar inclusive Multi-Cloud.
+
+![](2021-11-02-00-19-29.png)
+
+![](2021-11-02-00-32-21.png)
+
+https://www.delltechnologies.com/asset/nl-nl/products/converged-infrastructure/industry-market/rancher-cluster-with-vxflex-csi-000066.pdf
+
+Vamos iniciar realizando a instalação do Rancher Single Node.
+Nesse exemplo será instalado o Rancher 2.4.3. Primeiramente vou acessar a máquina que será utilizada para o Rancher Server e executar o comando abaixo:
+```sh
+docker run -d --name rancher --restart=unless-stopped -v /opt/rancher:/var/lib/rancher  -p 80:80 -p 443:443 rancher/rancher:v2.4.3
+```
+![](2021-11-02-01-05-10.png)
+
+> Observe que no comando temos a opção `-v /opt/rancher:/var/lib/rancher` que está criando um volume `/opt/rancher` que é no próprio disco da máquina e dentro do container ele será mapeando para o diretório `/var/lib/rancher`.
+
+Dessa forma se o container morrer, ao ser recriado ele voltará ao normal sem nenhum problema, já que seus dados estarão salvos em outro local.
+
+*Abaixo deixo guardado o usuário e senha dessa instalação. Provavelmente se você estiver lendo esse arquivo e tentar utilizar essas credenciais elas não funcionarão mais ou talvez nem o ambiente esteja mais online, visto que eu o criei apenas para fins de estudos.*
+```sh
+usuário: admin
+password: YdsLeqxFGk5Dud9
+```
+
+> Um adendo que quero fazer é sobre a parte de segurança e autenticação. No Rancher temos já integrado vários tipos de autenticação disponíveis. Então não precisariamos lidar com esse tipo de problema no Kubernetes uma vez que isso será feito pelo Rancher.
+> ![](2021-11-02-01-12-28.png)
+<br>
+<br>
+
+# Instalação do Cluster Kubernetes
+Para criar o cluster, vamos acessar o Rancer e em *Add Cluster*.
+![](2021-11-02-01-17-47.png)
+
+Vamos escolher a opção *From existing nodes (Custom)*
+![](2021-11-02-01-19-12.png)
+
+Em nosso exemplo, vamos mudar poucas coisas. 
+Primeiramente vamos dar um nome, no meu caso eu dei o nome de *padawan*.
+![](2021-11-02-01-23-17.png)
+
+Mais abaixo tem uma opção importante que não pode deixar de ser marcada ou nesse caso desabilitada. Que é o Nginx Ingress. 
+> Por padrão o Rancher já instala o Nginx Ingress por padrão, mas vamos deixar desabilitado nesse exemplo para podermos utilizar o Traefic e mais para frente vamos executar utilizando o Nginx Ingress portanto, calma jovem Padawan.
+![](2021-11-02-01-23-56.png)
+
+Após clicar em Next seremos direcionados para a próxima tela de configuração onde vamos ter o script que executaremos nas 3 máquinas que vão compor o Cluster Kubernetes. Para que elas tenham as mesmas funções vamos selecionar as 3 opções etcd, Control Plane e Worker. Também vou expandir a guia advanced options para poder escolher um node name que vou chamar o primeiro de k8s-1, vou copiar o script e alterar para na segunda máquina executar como k8s-2 e na terceira de k8s3. Observe também que essas opções foram adicionadas ao final da linha de comando.
+![](2021-11-02-01-37-33.png)
+
+Segue abaixo o script gerado:
+
+Servidor 1
+```sh
+sudo docker run -d --privileged --restart=unless-stopped --net=host -v /etc/kubernetes:/etc/kubernetes -v /var/run:/var/run rancher/rancher-agent:v2.4.3 --server https://rancher.rcic.com.br --token tgcjqs772cgg5kk7fzwq59dsffdxnxrnng7c2hg6g2r7d4b2zfcrm6 --ca-checksum e622c086cf27d07232f97ab963a09e37bded73fbb33abd7000029ede94e50550 --node-name k8s-1 --etcd --controlplane --worker
+```
+
+Servidor 2
+```sh
+sudo docker run -d --privileged --restart=unless-stopped --net=host -v /etc/kubernetes:/etc/kubernetes -v /var/run:/var/run rancher/rancher-agent:v2.4.3 --server https://rancher.rcic.com.br --token tgcjqs772cgg5kk7fzwq59dsffdxnxrnng7c2hg6g2r7d4b2zfcrm6 --ca-checksum e622c086cf27d07232f97ab963a09e37bded73fbb33abd7000029ede94e50550 --node-name k8s-2 --etcd --controlplane --worker
+```
+
+Servidor 3
+```sh
+sudo docker run -d --privileged --restart=unless-stopped --net=host -v /etc/kubernetes:/etc/kubernetes -v /var/run:/var/run rancher/rancher-agent:v2.4.3 --server https://rancher.rcic.com.br --token tgcjqs772cgg5kk7fzwq59dsffdxnxrnng7c2hg6g2r7d4b2zfcrm6 --ca-checksum e622c086cf27d07232f97ab963a09e37bded73fbb33abd7000029ede94e50550 --node-name k8s-3 --etcd --controlplane --worker
+```
+Vamos entrar em cada uma das máquinas destinadas à membros do cluster e realizar o deploy do Kubernetes, cada um com o seu respectivo script.
