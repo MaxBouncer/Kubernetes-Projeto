@@ -787,10 +787,10 @@ Tambem podemos acessar o shell indo pela máquina onde o pod está rodando. No m
 
 Vou acessar por ssh esse servidor e checar com os mesmos comandos, inclusive salvando um arquivo lá para posteriormente quando ele for montado em outro servidor possamos ver esse arquivo tendo sido persistido.
 
-Mas antes precisamos acessar o pod do mysql que esta rodando nesse servidor, então vou começar dando o comando *`docker ps`* para conseguir ver o *`container id`* do servidor e depois vou utilizar esse id para executal o shell dele
+Mas antes precisamos acessar o pod do mysql que esta rodando nesse servidor, então vou começar dando o comando *`docker ps`* para conseguir ver o *`container id`* do servidor e depois vou utilizar esse id para executar o shell dele
 ![](2021-11-02-12-27-26.png)
 
-No meu exemplo o container tinha o id: 48b647e1df3e então executei o comando como ilustrado abaixo:
+No meu exemplo o container tinha o id: *`48b647e1df3e`* então executei o comando como ilustrado abaixo:
 
 ```sh
 docker exec -it 48b647e1df3e /bin/bash
@@ -816,3 +816,122 @@ O *`container id`* mudou e vamos acessar ele por esse novo id
 ![](2021-11-02-12-43-21.png)
 
 ![](2021-11-02-12-54-08.png)
+
+# LOGS
+Quando temos diversos pods rodando e gerando infinitos logs precisamos centralizar essa informação para não ficarmos perdidos nos processos e possamos acompanhar o desenvolvimento das aplicações e pods. 
+Para que isso seja possivel vamos realizar a instalação de uma ferramenta de log no cluster. Essa ferramenta será a Graylog.
+
+## Deployment Graylog
+O arquivo de deployment do graylog é muito grande e por esse motivo ele ficará dentro da pasta exercicios com o nome de? adivinha... *`graylog.yml`*.
+Será necessário editar o arquivo e modificar para seu dominio especifico.
+
+Abaixo as linhas que devem ser alteradas:
+```sh
+Linha 265 - value: http://graylog.rancher.rcic.com.br/api
+Linha 341 - host: graylog.rancher.rcic.com.br
+```
+
+Observe que no arquivo ele está fazendo diversas coisas e vou pegar alguns exemplos e tentar dar maiores informações abaixo:
+
+Criando o namespace *`graylog`*
+```yml
+apiVersion: v1
+kind: Namespace
+metadata: 
+  name: graylog
+```
+
+O script *`graylog.yml`* cria diversos volumes, abaixo listo um deles que está com o nome *`mongodb-pvc`* e terá *`6Gi`* de armazenamento:
+```yml
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: mongodb-pvc
+  namespace: graylog
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: longhorn
+  resources:
+    requests:
+      storage: 6Gi
+```
+
+Exemplo de role sendo criada:
+```yml
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: ClusterRole
+metadata:
+  name: graylog
+  namespace: graylog
+rules:
+- apiGroups:
+  - ""
+  resources:
+  - nodes
+  - nodes/proxy
+  - services
+  - endpoints
+  - pods
+  verbs:
+  - get
+  - list
+  - watch
+  verbs:
+  - get
+```
+Alem disso tem regras de deploy do pod e serviços a ele relacionados.
+<br>
+<br>
+
+## O Stack é composto de:
+*`Elasticsearch, MongoDb, Graylog, FluentD`* esse ultimo estará em todos os hosts, porque ele será o responsável por capturar os logs para o *`Graylog`*.
+
+Ok. Agora vamos finalmente rodar o script para criar todo esse Stack!
+```sh
+kubectl apply -f graylog.yml
+```
+![](2021-11-02-13-44-37.png)
+
+Posso acompanhar o Deploy sendo executado se acessar o Rancher. No Rancher ele cria um namespace chamado graylog e temos que mover ele para o namespace default.
+![](2021-11-02-13-48-34.png)
+![](2021-11-02-13-48-43.png)
+![](2021-11-02-13-48-52.png)
+
+Agora que o *`graylog`* foi movido podemos ver ele e suas dependências na guia default. Observe que o *`fluentd`* está com 3 pods em execução.
+![](2021-11-02-13-53-02.png)
+
+Agora podemos acessar o Graylog.<br>
+![](2021-11-02-13-59-02.png)
+
+Segue a credencial padrão do Graylog no primeiro acesso:
+Usuário: admin
+Password: admin
+![](2021-11-02-14-01-05.png)
+
+Assim que logar vamos acessar a guia System > Inputs
+![](2021-11-02-14-03-09.png)
+
+Vamos escolher um do tipo *`GELF UDP`* e clicar em *`Launch new input`*
+![](2021-11-02-14-05-41.png)
+
+Vamos selecionar Global e dar um nome para ele, no meu exemplo eu dei o nome de k8s. <br>
+![](2021-11-02-14-06-31.png)
+
+Assim que adicionarmos ele vai começar a receber logs do *`fluentd`*, então vamos preparar alguns filtros.
+![](2021-11-02-14-08-16.png)
+
+Para isso vou acessar Manage Extractor e configur/adicionar um extrator para retirar do log só o que interessa.<br>
+![](2021-11-02-14-09-33.png)
+
+Em Add extractor clique em Get started depois em Load Message e em kubernetes acesse e escolha JSON
+![](2021-11-02-14-14-15.png)
+
+Na próxima guia apenas adicione um prefix e um title onde informado e clique em create extractor.
+![](2021-11-02-14-18-09.png)
+
+Agora o Graylog está rodando e capturando as informações necessárias.
+![](2021-11-02-14-24-35.png)
+![](2021-11-02-14-24-43.png)
+
+> Considerações: Com o *`Graylog`* podemos capturar os logs da aplicação e dar acesso ao desenvolvedor para que ele possa acessar os logs de sua aplicação sem que seja necessário eu dar acesso ao Cluster à ele, além de ter uma ferramenta onde podemos centralizar todos os logs e acompanha-los. O *`Graylog`* também é capaz de pegar os logs do LDAP. 
