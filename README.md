@@ -1012,11 +1012,6 @@ Depois de criada a cron, pegamos o estado dela usando:
 ```sh
 kubectl get cronjob hello
 ```
-
->  | NAME  |  SCHEDULE   | SUSPEND | ACTIVE | LAST SCHEDULE |  AGE  |
->  | :---: | :---------: | :-----: | :----: | :-----------: | :---: |
->  | hello | */1 * * * * |  False  |   0    |    \<none>    |  29s  |
-
   | NAME  |  SCHEDULE   | SUSPEND | ACTIVE | LAST SCHEDULE |  AGE  |
   | :---: | :---------: | :-----: | :----: | :-----------: | :---: |
   | hello | */1 * * * * |  False  |   0    |    \<none>    |  29s  |
@@ -1070,7 +1065,3 @@ spec:
 kubectl apply -f configmap.yml
 ```
 Agora iremos entrar dentro do container e verificar as configurações definidas no ConfigMap.
-
-~~~sh
-ssh ubuntu@0.0.0.0
-~~~
