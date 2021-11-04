@@ -10,7 +10,7 @@
 
 
 Teremos 1 máquina que será o Rancher Server e outras 3 máquinas que serão os Kubernetes de produção.
-![](2021-11-01-14-11-23.png)
+![](img/2021-11-01-14-11-23.png)
 
 Vou configurar no domínio para apontar para o DNS do Google que será onde eu vou criar as máquinas virtuais e lá no DNS do google eu vou criar entradas do qual o endereço rancher.rci.com.br vai apontar para a máquina quer será o Rancher Server.
 
@@ -22,31 +22,31 @@ Também vou criar um balanceamento com Wildcard ( * ) que conterá os 3 iPs dos 
 
 Após dominio criado modificar as entradas DNS para apontar para o DNS do Google ou o provedor escolhido, como por exemplo os DNS da AWS. Para que possamos fazer essa configuração, vamos acessar o GCP e acessar o serviço Cloud DNS para criar uma nova zona que vai receber o domínio.
 
-![](2021-11-01-14-19-47.png)
+![](img/2021-11-01-14-19-47.png)
 
-![](2021-11-01-14-21-41.png)
+![](img/2021-11-01-14-21-41.png)
 
 Expandir a entrada do registro NS para poder pegar os endereços DNS do google que serão preenchidos no site do Registro Br.
-![](2021-11-01-14-25-04.png)
-![](2021-11-01-14-31-50.png)
+![](img/2021-11-01-14-25-04.png)
+![](img/2021-11-01-14-31-50.png)
 
 Acessar o site do Registro Br e adicionar as entradas DNS.
 
-![](2021-11-01-14-15-12.png)
+![](img/2021-11-01-14-15-12.png)
 
 # Criação do ambiente
 
 Agora vamos acessar Compute Engine e criar as máquinas virtuais. "VM Instance".
-![](2021-11-01-15-13-43.png)
+![](img/2021-11-01-15-13-43.png)
 
 ### Configurações da instância.
 Do o nome da instância e na guia de configuração da máquina, vou na opção personalisada e escolho 2 à 4 processadores com no minimo 6Gb de memória.
-![](2021-11-01-15-20-58.png)
+![](img/2021-11-01-15-20-58.png)
 
 ### Boot disk
 Também é necessário escolher em Boot disk a imagem do Ubuntu 16.04 TLS e o tamanho do HD. "30Gb"
 
-![](2021-11-01-15-26-04.png)
+![](img/2021-11-01-15-26-04.png)
 
 ### Script de criação das instâncias.
 Abaixo, segue script para a criação de todas as máquinas pela CLI com 4 processadores, 6Gb de RAM e 30Gb de HD. 
@@ -61,7 +61,7 @@ gcloud compute instances create k8s-3 --project=ordinal-link-321822 --zone=us-we
 ```
 
 ### Instâncias criadas:
-![](2021-11-01-15-40-50.png)
+![](img/2021-11-01-15-40-50.png)
 
 ### Instalação do Docker:
 
@@ -79,14 +79,14 @@ usermod -aG docker ubuntu
 
 docker ps
 ```
-![](2021-11-01-15-49-26.png)
+![](img/2021-11-01-15-49-26.png)
 
 ### Cloud DNS:
 Vou configurar agora as entradas do DNS que vão apontar para o rancher e um balanceador que será configurado com *Wildcard ( * )*
 
 Acessar a zona criada.
 
-![](2021-11-01-15-54-10.png)
+![](img/2021-11-01-15-54-10.png)
 
 ### Script de criação das entradas DNS:
 ```sh
@@ -95,7 +95,7 @@ gcloud beta dns --project=ordinal-link-321822 record-sets transaction start --zo
 gcloud beta dns --project=ordinal-link-321822 record-sets transaction start --zone="rcic" && gcloud beta dns --project=ordinal-link-321822 record-sets transaction add 35.197.59.9 34.82.244.41 35.233.199.77 --name="*.rancher.rcic.com.br." --ttl="300" --type="A" --zone="rcic" && gcloud beta dns --project=ordinal-link-321822 record-sets transaction execute --zone="rcic"
 
 ```
-![](2021-11-01-16-04-08.png)
+![](img/2021-11-01-16-04-08.png)
 
 # Git / Docker Compose / Images builds
 
@@ -179,7 +179,7 @@ docker ps
 ```
 Podemos acessar então nossa aplicação nas portas 80 e 8080 no ip da nossa instância.
 
-![](2021-11-01-23-49-23.png)
+![](img/2021-11-01-23-49-23.png)
 
 Iremos acessar a api em /redis para nos certificar que está tudo ok, e depois iremos limpar todos os containers e volumes.
 ```sh
@@ -260,7 +260,7 @@ volumes:
 **OBS:** *Note que quando removemos os container, mantivemos a imagem dos container e será essas imagens que vamos utilizar nesse build.*
 <br>
 
-![](2021-11-01-23-43-33.png)
+![](img/2021-11-01-23-43-33.png)
 
 Após alterar e colocar o nome correto das imagens, rodar o comando de *up -d* para subir toda a stack.
 
@@ -279,7 +279,7 @@ curl rancher.rcic.com.br:80/redis
 ```
 
 Se acessarmos o IP na porta 80 vamos ver a aplicação rodando e também podemos acessar o /redis para ver o contador de acesso à essa página incrementando a cada acesso.
-![](2021-11-01-23-52-14.png)
+![](img/2021-11-01-23-52-14.png)
 
 Explicação: Toda essa aplicação foi *"deployada"*  de uma só vez com um unico arquivo docker *docker file*. Ele criou todo um deploy de aplicação, totalmente padronizado e com todas as suas dependências satisfeitas.
 
@@ -287,7 +287,7 @@ Agora para finalizar vamos terminar a nossa aplicação temos que rodar o comand
 ```sh
 docker-compose down
 ```
-![](2021-11-01-23-59-09.png)
+![](img/2021-11-01-23-59-09.png)
 
 <br>
 <br>
@@ -299,9 +299,9 @@ docker-compose down
 O Rancher permite que tenhamos vários cluster Kubernetes gerenciados pelo Rancher, como por exemplo um Cluster Kubernets para Desenvolvimento, outro para Produção, Testes etc...
 Por padrão o Kubernetes não tem a autenticação LDAP para os usuários, então o Rancher pode cuidar dessa autenticação e não precisaremos mais nos preocupar com essa integração do Kubernetes. Podemos configurar o Rancher para rodar inclusive Multi-Cloud.
 
-![](2021-11-02-00-19-29.png)
+![](img/2021-11-02-00-19-29.png)
 
-![](2021-11-02-00-32-21.png)
+![](img/2021-11-02-00-32-21.png)
 
 https://www.delltechnologies.com/asset/nl-nl/products/converged-infrastructure/industry-market/rancher-cluster-with-vxflex-csi-000066.pdf
 
@@ -310,7 +310,7 @@ Nesse exemplo será instalado o Rancher 2.4.3. Primeiramente vou acessar a máqu
 ```sh
 docker run -d --name rancher --restart=unless-stopped -v /opt/rancher:/var/lib/rancher  -p 80:80 -p 443:443 rancher/rancher:v2.4.3
 ```
-![](2021-11-02-01-05-10.png)
+![](img/2021-11-02-01-05-10.png)
 
 > Observe que no comando temos a opção `-v /opt/rancher:/var/lib/rancher` que está criando um volume `/opt/rancher` que é no próprio disco da máquina e dentro do container ele será mapeando para o diretório `/var/lib/rancher`.
 
@@ -323,27 +323,27 @@ password: YdsLeqxFGk5Dud9
 ```
 
 > Um adendo que quero fazer é sobre a parte de segurança e autenticação. No Rancher temos já integrado vários tipos de autenticação disponíveis. Então não precisariamos lidar com esse tipo de problema no Kubernetes uma vez que isso será feito pelo Rancher.
-> ![](2021-11-02-01-12-28.png)
+> ![](img/2021-11-02-01-12-28.png)
 <br>
 <br>
 
 # Instalação do Cluster Kubernetes
 Para criar o cluster, vamos acessar o Rancer e em *Add Cluster*.
-![](2021-11-02-01-17-47.png)
+![](img/2021-11-02-01-17-47.png)
 
 Vamos escolher a opção *From existing nodes (Custom)*
-![](2021-11-02-01-19-12.png)
+![](img/2021-11-02-01-19-12.png)
 
 Em nosso exemplo, vamos mudar poucas coisas. 
 Primeiramente vamos dar um nome, no meu caso eu dei o nome de *padawan*.
-![](2021-11-02-01-23-17.png)
+![](img/2021-11-02-01-23-17.png)
 
 Mais abaixo tem uma opção importante que não pode deixar de ser marcada ou nesse caso desabilitada. Que é o Nginx Ingress. 
 > Por padrão o Rancher já instala o Nginx Ingress por padrão, mas vamos deixar desabilitado nesse exemplo para podermos utilizar o Traefic e mais para frente vamos executar utilizando o Nginx Ingress portanto, calma jovem Padawan.
-![](2021-11-02-01-23-56.png)
+![](img/2021-11-02-01-23-56.png)
 
 Após clicar em Next seremos direcionados para a próxima tela de configuração onde vamos ter o script que executaremos nas 3 máquinas que vão compor o Cluster Kubernetes. Para que elas tenham as mesmas funções vamos selecionar as 3 opções etcd, Control Plane e Worker. Também vou expandir a guia advanced options para poder escolher um node name que vou chamar o primeiro de k8s-1, vou copiar o script e alterar para na segunda máquina executar como k8s-2 e na terceira de k8s3. Observe também que essas opções foram adicionadas ao final da linha de comando.
-![](2021-11-02-01-37-33.png)
+![](img/2021-11-02-01-37-33.png)
 
 Segue abaixo o script gerado:
 
@@ -364,11 +364,11 @@ sudo docker run -d --privileged --restart=unless-stopped --net=host -v /etc/kube
 Vamos entrar em cada uma das máquinas destinadas à membros do cluster e realizar o deploy do Kubernetes, cada um com o seu respectivo script.
 
 Após a execução do Script o Rancher vai se encarregar de fazer todo o deploy nas máquinas. Podemos observer o status indo na interface do rancher e acessar o pelo nome do cluster e posteriormente nodes.
-![](2021-11-02-01-44-56.png)
-![](2021-11-02-01-45-26.png)
+![](img/2021-11-02-01-44-56.png)
+![](img/2021-11-02-01-45-26.png)
 
 Devemos aguardar até o termino de todo o deploy, uma vez que ele da algumas mensagens de erro e volta a tentar realizar o deploy novamente até que tudo esteja realmente instalado e finalizado.
-![](2021-11-02-01-52-13.png)
+![](img/2021-11-02-01-52-13.png)
 <br>
 <br>
 
@@ -396,10 +396,10 @@ Vamos precisar instalar ela apenas no servidor do Rancher Server, para isso vou 
 Com essa instalação ao executar comandos pelo Kubectl ele vai disparar os comando para ele mesmo (Rancher) e ele vai encaminhar os comandos para o Cluster Kubernetes que estão agregados. Então agora todas as execuções serão feitas por arquivos *`yml`*
 
 Bom após a instalação do Kubectl vamos acessar novamente à página do rancher e pegar o arquivo Kubeconfig File para rodar no servidor Rancher do Cluster.
-![](2021-11-02-02-21-25.png)
+![](img/2021-11-02-02-21-25.png)
 
 Vai abrir um script que já informa que ele deve ser salvo no caminho: ~/.kube/config
-![](2021-11-02-02-22-39.png)
+![](img/2021-11-02-02-22-39.png)
 
 Como estamos utilizando o usuário ubuntu para rodar o Rancher, será necessário utilizar esse usuário para criar o arquivo ou criar como root e mudar o dono do arquivo para o ubuntu. No meu caso eu vou utilizar diretamente o usuário ubuntu.
 
@@ -515,7 +515,7 @@ contexts:
 current-context: "padawan"
 
 ```
-![](2021-11-02-02-26-50.png)
+![](img/2021-11-02-02-26-50.png)
 
 Agora para checar se está tudo funcionando vou executar o comando abaixo que vai se conectar ao Cluster e retornar os nós que estão rodando *`nodes`*
 
@@ -523,19 +523,19 @@ Agora para checar se está tudo funcionando vou executar o comando abaixo que va
 kubectl get nodes
 ```
 
-![](2021-11-02-02-29-07.png)
+![](img/2021-11-02-02-29-07.png)
 
 E para pegar todos os pods que estão rodando no namespace kube-system
 ```sh
 kubectl get pods -n kube-system
 ```
-![](2021-11-02-02-31-48.png)
+![](img/2021-11-02-02-31-48.png)
 
 # Instalação do Traefik **( DNS )**
 
 ## Traefik - DNS
 Antes era muito utilizado o Nginx, HProxi e agora será utilizada uma nova ferramenta que é o Traefik. Cada um dos *"`nós`"* nodes do Cluster terá um container Traefik executando, ele vai ficar ouvindo quando a requisição chegar. Quando a requisição chega ela informa qual aplicação e porta que deseja chegar e o Traefik vai saber que qual é e onde internamente ela está, dessa forma temos um bind entre a aplicação e seu pod de execução interno.
-![](2021-11-02-09-26-36.png)
+![](img/2021-11-02-09-26-36.png)
 
 ```sh
 kubectl apply -f https://raw.githubusercontent.com/containous/traefik/v1.7/examples/k8s/traefik-rbac.yaml
@@ -546,14 +546,14 @@ Exibindo os pods do traefik rodando.
 ```sh
 kubectl --namespace=kube-system get pods
 ```
-![](2021-11-02-09-42-25.png)
+![](img/2021-11-02-09-42-25.png)
 
 No rancher podemos acessar o nome projeto e o system
 
-![](2021-11-02-09-44-53.png)
+![](img/2021-11-02-09-44-53.png)
 
 E mais abaixo no Namespace kube-system podemos ver os pods do traefik executando.
-![](2021-11-02-09-46-32.png)
+![](img/2021-11-02-09-46-32.png)
 
 
 Agora vamos expor o traefik. Toda vez que eu quiser criar um Ingress eu posso criar um arquivo yml como o abaixo para que ele faça esse trabalho.
@@ -599,13 +599,13 @@ Após ter o arquivo criado vou executar com o comando abaixo:
 ```sh
 kubectl apply -f ui.yml
 ```
-![](2021-11-02-09-58-10.png)
+![](img/2021-11-02-09-58-10.png)
 
 Se eu acessar o endereço do Traefik ele vai me abrir a interface web onde teremos um dashboard.
-![](2021-11-02-09-59-45.png)
+![](img/2021-11-02-09-59-45.png)
 
 Todas as vezes que for criado um Ingress ele aparecerá na guia a esqueda de "Frontend" e teremos o seu correspondente especifico para o "Backend".
-![](2021-11-02-10-02-51.png)
+![](img/2021-11-02-10-02-51.png)
 
 Eu não consigo explicar melhor como é o funcionamento do Traefik. Mas talvez esse pensamento seja de ajuda. 
 O Traefik é um DNS que recebe a requisição atravez do cluster e o direciona internamente para onde a aplicação está rodando. Ele é um DNS interno para o Kubernetes.
@@ -616,42 +616,42 @@ Os contêineres são imutáveis ​​significa que eles não gravam dados perma
 
 Diferença entre o volume K8s e o volume persistente: o ciclo de vida do volume está vinculado a um pod. Ele é excluído quando o pod é excluído. Enquanto o volume persistente tem um ciclo de vida independente. Ele pode existir além da vida útil de um pod.
 
-![](2021-11-02-10-20-29.png)
+![](img/2021-11-02-10-20-29.png)
 
 Quando trabalhamos com vários containers e precisamos gerenciar vários volumes, precisamos de um sistema de gerenciamento para esses volumes e aí entra em cena o Longhorn.
 Nesse exemplo ele vai utilizar o próprio disco do host e criar um sistema de storage em cima, replicando com os armazenamentos internos dos hosts
 
-![](2021-11-02-10-27-26.png)
+![](img/2021-11-02-10-27-26.png)
 
 No exemplo vamos fazer o deploy de uma aplicação MySQL/MariaDb então vamos precisar criar o volume para esse banco de dados.
 
 Vamos acessar o projeto na guia default e selecionar APPs
 
-![](2021-11-02-11-16-53.png)
+![](img/2021-11-02-11-16-53.png)
 
 Ir em Launch e buscar pela aplicação do Longhorn.
 
-![](2021-11-02-11-18-38.png)
-![](2021-11-02-11-19-51.png)
+![](img/2021-11-02-11-18-38.png)
+![](img/2021-11-02-11-19-51.png)
 
 A única mudança que vou fazer no deploy do Longhorn é na sua versão que vou utilizar uma versão mais antiga para manter uma compatibilidade com o projeto.
-![](2021-11-02-11-21-53.png)
+![](img/2021-11-02-11-21-53.png)
 
 Após clicar em Launch vamos aguardar o deploy.
-![](2021-11-02-11-24-48.png)
-![](2021-11-02-11-24-58.png)
+![](img/2021-11-02-11-24-48.png)
+![](img/2021-11-02-11-24-58.png)
 
 Após finalizar o deploy podemos acessar o Longhorn acessando a guia Apps da area Default do projeto e clicando em index.html.
-![](2021-11-02-11-28-13.png)
+![](img/2021-11-02-11-28-13.png)
 
 Essa é a tela de gerenciamento do Longhorn:
-![](2021-11-02-11-29-23.png)
+![](img/2021-11-02-11-29-23.png)
 
 Em Node podemos ver quantos nós temos no cluster
-![](2021-11-02-11-30-37.png)
+![](img/2021-11-02-11-30-37.png)
 
 Volumes criados:
-![](2021-11-02-11-31-34.png)
+![](img/2021-11-02-11-31-34.png)
 
 Agora vamos criar um arquivo *`yml`* com as configurações do volume que queremos.
 ```sh
@@ -768,54 +768,54 @@ Visto isso vamos acessar o servidor do Rancher e executar o script.
 ```sh
 kubectl apply -f mariadb-longhorn-volume.yml
 ```
-![](2021-11-02-11-54-42.png)
+![](img/2021-11-02-11-54-42.png)
 
 Ao acessar o Longhorn podemos ver o volume criado:
-![](2021-11-02-11-55-48.png)
+![](img/2021-11-02-11-55-48.png)
 
 E se acessarmos o volume vamos ver as 3 replicas criadas que estão rodando em cada um dos hosts:
-![](2021-11-02-11-57-52.png)
+![](img/2021-11-02-11-57-52.png)
 
 
 Agora vamos acessar o shell do pod mysql para ver o ponto de montagem como ficou:
 
-![](2021-11-02-12-03-11.png)
-![](2021-11-02-12-02-35.png)
+![](img/2021-11-02-12-03-11.png)
+![](img/2021-11-02-12-02-35.png)
 
 Tambem podemos acessar o shell indo pela máquina onde o pod está rodando. No meu caso ele está rodando no servidor ks8-2
-![](2021-11-02-12-11-10.png)
+![](img/2021-11-02-12-11-10.png)
 
 Vou acessar por ssh esse servidor e checar com os mesmos comandos, inclusive salvando um arquivo lá para posteriormente quando ele for montado em outro servidor possamos ver esse arquivo tendo sido persistido.
 
 Mas antes precisamos acessar o pod do mysql que esta rodando nesse servidor, então vou começar dando o comando *`docker ps`* para conseguir ver o *`container id`* do servidor e depois vou utilizar esse id para executar o shell dele
-![](2021-11-02-12-27-26.png)
+![](img/2021-11-02-12-27-26.png)
 
 No meu exemplo o container tinha o id: *`48b647e1df3e`* então executei o comando como ilustrado abaixo:
 
 ```sh
 docker exec -it 48b647e1df3e /bin/bash
 ```
-![](2021-11-02-12-32-17.png)
+![](img/2021-11-02-12-32-17.png)
 
 Criando um arquivo no volume:
 
-![](2021-11-02-12-35-54.png)
+![](img/2021-11-02-12-35-54.png)
 
 
 Agora vou simular uma falha deletando o pod pelo rancher. Assim que ele for deletado ele vai ser re-criado automanticamente e assim que for recriado vou checar se o arquivo continua lá.
 
-![](2021-11-02-12-38-11.png)
-![](2021-11-02-12-39-49.png)
+![](img/2021-11-02-12-38-11.png)
+![](img/2021-11-02-12-39-49.png)
 
 No meu exemplo ele acabou criando no mesmo host, mas não tem problema, podemos checar do mesmo jeito.
 Observe também que ele criou um adicional antes de excluir o anterior.
 
-![](2021-11-02-12-41-11.png)
+![](img/2021-11-02-12-41-11.png)
 
 O *`container id`* mudou e vamos acessar ele por esse novo id
-![](2021-11-02-12-43-21.png)
+![](img/2021-11-02-12-43-21.png)
 
-![](2021-11-02-12-54-08.png)
+![](img/2021-11-02-12-54-08.png)
 
 # LOGS
 Quando temos diversos pods rodando e gerando infinitos logs precisamos centralizar essa informação para não ficarmos perdidos nos processos e possamos acompanhar o desenvolvimento das aplicações e pods. 
@@ -891,48 +891,48 @@ Ok. Agora vamos finalmente rodar o script para criar todo esse Stack!
 ```sh
 kubectl apply -f graylog.yml
 ```
-![](2021-11-02-13-44-37.png)
+![](img/2021-11-02-13-44-37.png)
 
 Posso acompanhar o Deploy sendo executado se acessar o Rancher. No Rancher ele cria um namespace chamado graylog e temos que mover ele para o namespace default.
-![](2021-11-02-13-48-34.png)
-![](2021-11-02-13-48-43.png)
-![](2021-11-02-13-48-52.png)
+![](img/2021-11-02-13-48-34.png)
+![](img/2021-11-02-13-48-43.png)
+![](img/2021-11-02-13-48-52.png)
 
 Agora que o *`graylog`* foi movido podemos ver ele e suas dependências na guia default. Observe que o *`fluentd`* está com 3 pods em execução.
-![](2021-11-02-13-53-02.png)
+![](img/2021-11-02-13-53-02.png)
 
 Agora podemos acessar o Graylog.<br>
-![](2021-11-02-13-59-02.png)
+![](img/2021-11-02-13-59-02.png)
 
 Segue a credencial padrão do Graylog no primeiro acesso:
 Usuário: admin
 Password: admin
-![](2021-11-02-14-01-05.png)
+![](img/2021-11-02-14-01-05.png)
 
 Assim que logar vamos acessar a guia System > Inputs <br>
-![](2021-11-02-14-03-09.png)
+![](img/2021-11-02-14-03-09.png)
 
 Vamos escolher um do tipo *`GELF UDP`* e clicar em *`Launch new input`* <br>
-![](2021-11-02-14-05-41.png)
+![](img/2021-11-02-14-05-41.png)
 
 Vamos selecionar Global e dar um nome para ele, no meu exemplo eu dei o nome de k8s. <br>
-![](2021-11-02-14-06-31.png)
+![](img/2021-11-02-14-06-31.png)
 
 Assim que adicionarmos ele vai começar a receber logs do *`fluentd`*, então vamos preparar alguns filtros.
-![](2021-11-02-14-08-16.png)
+![](img/2021-11-02-14-08-16.png)
 
 Para isso vou acessar Manage Extractor e configur/adicionar um extrator para retirar do log só o que interessa.<br>
-![](2021-11-02-14-09-33.png)
+![](img/2021-11-02-14-09-33.png)
 
 Em Add extractor clique em Get started depois em Load Message e em kubernetes acesse e escolha JSON
-![](2021-11-02-14-14-15.png)
+![](img/2021-11-02-14-14-15.png)
 
 Na próxima guia apenas adicione um prefix e um title onde informado e clique em create extractor.
-![](2021-11-02-14-18-09.png)
+![](img/2021-11-02-14-18-09.png)
 
 Agora o Graylog está rodando e capturando as informações necessárias.
-![](2021-11-02-14-24-35.png)
-![](2021-11-02-14-24-43.png)
+![](img/2021-11-02-14-24-35.png)
+![](img/2021-11-02-14-24-43.png)
 
 > Considerações: Com o *`Graylog`* podemos capturar os logs da aplicação e dar acesso ao desenvolvedor para que ele possa acessar os logs de sua aplicação sem que seja necessário eu dar acesso ao Cluster à ele, além de ter uma ferramenta onde podemos centralizar todos os logs e acompanha-los. O *`Graylog`* também é capaz de pegar os logs do LDAP. 
 
@@ -941,21 +941,128 @@ Agora o Graylog está rodando e capturando as informações necessárias.
 
 # Monitoramento
 
+O Grafana/Prometheus é a stack que iremos usar para monitoramento. O Deployment dela será feito pelo Catálogo de Apps.
+
 ## Habilitando o monitoramento.
 Para habilitar o monitoramento, devemos acessar o rancher e ir na aba tools > monitoring.
-![](2021-11-02-18-24-52.png)
+![](img/2021-11-02-18-24-52.png)
 
 Lá devemos habilitar o monitoramento clicando em Enable.
 > Aqui quero fazer uma ressalva. Em um ambiente real de produção, temos que aumentar os valores de CPU e Memória e quem sabe também habilitar a persistência de dados. Em um ambiente real de produção precisamos que a máquina tenha mais poder de *`"fogo"`* para conseguir processar todas as informações.
 
 Foi criado um Namespace chamado cattle-prometheus, o print abaixo está em fase de deploying
-![](2021-11-02-18-28-40.png)
+![](img/2021-11-02-18-28-40.png)
 
 E agora essa é a nova tela com o monitoramento ativo.
-![](2021-11-02-18-30-36.png)
+![](img/2021-11-02-18-30-36.png)
 
 Também ganhamos uma área de metricas.
-![](2021-11-02-18-31-14.png)
+![](img/2021-11-02-18-31-14.png)
 
 E se em qualquer lugar da tela eu clicar no icone do Grafana ele vai abrir o Grafana e exibir tudo que está sendo monitorado por ele no momento.
-![](2021-11-02-18-33-36.png)
+![](img/2021-11-02-18-33-36.png)
+
+
+# Cronjobs
+
+O tipo de serviço como CronJob é um serviço igual a uma cron, porém é executado no cluster kubernetes. Você agenda um pod que irá rodar em uma frequência determinada de tempo. Pode ser usado para diversas funções, como executar backup's dos bancos de dados.
+
+Nesse exemplo, iremos executar um pod, com um comando para retornar uma mensagem de tempos em tempos, a mensagem é "Hello from the Kubernetes cluster"
+
+Conteúdo do arquivo *`conjob.yml`*:
+```yml
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: special-config2
+data:
+  SPECIAL_LEVEL: very
+  SPECIAL_TYPE: charm
+
+---
+apiVersion: batch/v1beta1
+kind: CronJob
+metadata:
+  name: hello
+  namespace: default
+spec:
+  schedule: "*/1 * * * *"
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+            - name: test-container
+              image: k8s.gcr.io/busybox
+              command: [ "/bin/sh", "-c", "env" ]
+              envFrom:
+              - configMapRef:
+                  name: special-config2
+          # restartPolicy: Never
+          restartPolicy: OnFailure 
+```
+
+```sh
+kubectl apply -f cronjob.yml
+```
+> configmap/special-config2 created
+> cronjob.batch/hello created
+
+Depois de criada a cron, pegamos o estado dela usando:
+```sh
+kubectl get cronjob hello
+```
+> NAME    SCHEDULE      SUSPEND   ACTIVE   LAST SCHEDULE   AGE
+> hello   */1 * * * *   False     0        <none>          29s
+
+
+Ainda não existe um job ativo, e nenhum agendado também.
+Vamos esperar por 1 minutos ate o job ser criado:
+```sh
+kubectl  get jobs --watch
+```
+![](img/2021-11-02-19-07-34.png)
+
+Entrar no Rancher para ver os logs e a sequencia de execucao.
+![](img/2021-11-02-19-05-46.png)
+![](img/2021-11-02-19-06-03.png)
+
+# ConfigMap
+
+O ConfigMap é um tipo de componente muito usado, principalmente quando precisamos colocar configurações dos nossos serviços externas aos contâiners que estão rodando a aplicação. 
+
+Nesse exemplo, iremos criar um ConfigMap, e iremos acessar as informações dentro do container que está a aplicação.
+
+Código do arquivo configmap.yml
+```yml
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: special-config
+data:
+  SPECIAL_LEVEL: very
+  SPECIAL_TYPE: charm
+
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: dapi-test-pod
+spec:
+  containers:
+    - name: test-container
+      image: k8s.gcr.io/busybox
+      command: [ "/bin/sh", "-c", "env" ]
+      envFrom:
+      - configMapRef:
+          name: special-config
+  restartPolicy: Never
+```
+
+```sh
+kubectl apply -f configmap.yml
+```
+Agora iremos entrar dentro do container e verificar as configurações definidas no ConfigMap.
+
