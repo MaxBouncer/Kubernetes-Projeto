@@ -934,9 +934,8 @@ Agora o Graylog está rodando e capturando as informações necessárias.
 ![](img/2021-11-02-14-24-35.png)
 ![](img/2021-11-02-14-24-43.png)
 
-> Considerações: Com o *`Graylog`* podemos capturar os logs da aplicação e dar acesso ao desenvolvedor para que ele possa acessar os logs de sua aplicação sem que seja necessário eu dar acesso ao Cluster à ele, além de ter uma ferramenta onde podemos centralizar todos os logs e acompanha-los. O *`Graylog`* também é capaz de pegar os logs do LDAP. 
+> Considerações: Com o *`Graylog`* podemos capturar os logs da aplicação e dar acesso ao desenvolvedor para que ele possa acessar os logs de sua aplicação sem que seja necessário eu dar acesso ao Cluster à ele, além de ter uma ferramenta onde podemos centralizar todos os logs e acompanha-los. O *`Graylog`* também é capaz de pegar os logs do LDAP.
 
-<br>
 <br>
 
 # Monitoramento
@@ -1013,9 +1012,14 @@ Depois de criada a cron, pegamos o estado dela usando:
 ```sh
 kubectl get cronjob hello
 ```
-> NAME    SCHEDULE      SUSPEND   ACTIVE   LAST SCHEDULE   AGE
-> hello   */1 * * * *   False     0        <none>          29s
 
+>  | NAME  |  SCHEDULE   | SUSPEND | ACTIVE | LAST SCHEDULE |  AGE  |
+>  | :---: | :---------: | :-----: | :----: | :-----------: | :---: |
+>  | hello | */1 * * * * |  False  |   0    |    \<none>    |  29s  |
+
+  | NAME  |  SCHEDULE   | SUSPEND | ACTIVE | LAST SCHEDULE |  AGE  |
+  | :---: | :---------: | :-----: | :----: | :-----------: | :---: |
+  | hello | */1 * * * * |  False  |   0    |    \<none>    |  29s  |
 
 Ainda não existe um job ativo, e nenhum agendado também.
 Vamos esperar por 1 minutos ate o job ser criado:
@@ -1027,6 +1031,7 @@ kubectl  get jobs --watch
 Entrar no Rancher para ver os logs e a sequencia de execucao.
 ![](img/2021-11-02-19-05-46.png)
 ![](img/2021-11-02-19-06-03.png)
+<br>
 
 # ConfigMap
 
@@ -1066,3 +1071,6 @@ kubectl apply -f configmap.yml
 ```
 Agora iremos entrar dentro do container e verificar as configurações definidas no ConfigMap.
 
+~~~sh
+ssh ubuntu@0.0.0.0
+~~~
